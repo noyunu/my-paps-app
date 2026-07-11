@@ -51,4 +51,4 @@ if st.button("📊 PAPS 분석 및 운동 처방 리포트 보기"):
         else: st.success("- [근력 우수]: 상체 근력이 매우 우수합니다. 신체 지지 능력이 안정적입니다.")
 
 
-!npx localtunnel --port 8501
+
