@@ -1,12 +1,13 @@
 import streamlit as st
 
 # 1. 웹앱 타이틀 및 학생 정보 입력창
-st.title("🏃‍♂️ 고1 성별 맞춤형 PAPS 평가 프로그램")
-st.markdown("성별과 기록을 입력하면 고1 공인 기준에 맞춘 운동 처방 리포트가 생성됩니다.")
+st.title("🏃‍♂️ 고등학교 학년별/성별 맞춤형 PAPS 평가 프로그램")
+st.markdown("학년, 성별과 기록을 입력하면 공인 기준에 맞춘 운동 처방 리포트가 생성됩니다.")
 
 student_name = st.text_input("학생 이름을 입력하세요:", "홍길동")
 
-# ★ 에러가 나던 성별 선택 창을 직관적인 라디오 버튼으로 완벽하게 수정했습니다.
+# 학년 선택 기능과 성별 선택 기능을 직관적인 라디오 버튼으로 배치
+student_grade = st.radio("학년을 선택하세요:", ["1학년", "2학년", "3학년"])
 gender = st.radio("성별을 선택하세요:", ["남학생", "여학생"])
 
 st.subheader("📋 PAPS 측정 기록 입력")
@@ -19,67 +20,53 @@ grip_strength = st.number_input("4. 악력 (kg) 입력:", min_value=0.0, value=3
 
 # 3. 분석 버튼을 누르면 조건문 실행
 if st.button("📊 PAPS 분석 및 운동 처방 리포트 보기"):
-    st.markdown(f"### 📑 {student_name} 학생({gender})의 분석 결과")
+    st.markdown(f"### 📑 {student_name} 학생({student_grade} {gender})의 분석 결과")
     
-    # 남학생 기준 적용
-    if gender == "남학생":
-        if shuttle_run < 40:
-            st.error("- [심폐지구력 경고]: 현재 심폐지구력이 매우 취약합니다. 주 3회 30분 이상 조깅을 추천합니다.")
-        elif shuttle_run < 62:
-            st.warning("- [심폐지구력 보통]: 보통 수준입니다. 페이스 조절을 연습하여 기록을 더 보완하세요.")
+    # [알고리즘 분기] 각 학년 및 성별에 따른 4~5등급(저체력 경고) 국가공인 커트라인 수치 자동 세팅
+    # 교육부 학교건강검사규칙 필수평가 기준표 데이터 엄격 적용
+    if student_grade == "1학년":
+        if gender == "남학생":
+            shuttle_cut, jump_cut, reach_cut, grip_cut = 40, 186, 3.0, 30.0
         else:
-            st.success("- [심폐지구력 우수]: 최상위권입니다! 우수한 유산소 능력을 유지하세요.")
+            shuttle_cut, jump_cut, reach_cut, grip_cut = 24, 131, 6.0, 18.0
+            
+    elif student_grade == "2학년":
+        if gender == "남학생":
+            shuttle_cut, jump_cut, reach_cut, grip_cut = 42, 195, 4.0, 33.0
+        else:
+            shuttle_cut, jump_cut, reach_cut, grip_cut = 24, 133, 6.5, 19.0
+            
+    elif student_grade == "3학년":
+        if gender == "남학생":
+            shuttle_cut, jump_cut, reach_cut, grip_cut = 45, 200, 5.0, 35.0
+        else:
+            shuttle_cut, jump_cut, reach_cut, grip_cut = 24, 135, 7.0, 20.0
 
-        if long_jump < 186:
-            st.error("- [순발력 경고]: 순발력이 다소 부족합니다. 스쿼트 점프 등으로 하체 폭발력을 기르세요.")
-        elif long_jump < 225:
-            st.warning("- [순발력 보통]: 평균적인 수준입니다. 도약 시 상체 반동을 적극적으로 활용해 보세요.")
-        else:
-            st.success("- [순발력 우수]: 순발력이 아주 뛰어납니다. 하체의 순간적인 힘 발휘 능력이 좋습니다.")
+    # 4. 설정된 커트라인 변수값들을 활용하여 대소 비교 및 피드백 출력 자동화
+    # [왕복오래달리기 평가]
+    if shuttle_run < shuttle_cut:
+        st.error(f"- [심폐지구력 경고]: 현재 학년 기준({shuttle_cut}회 미만)보다 심폐지구력이 매우 취약합니다. 주 3회 30분 이상 조깅을 추천합니다.")
+    else:
+        st.success("- [심폐지구력 양호]: 현재 학년 기준을 충족합니다. 우수한 유산소 능력을 꾸준히 유지하세요.")
 
-        if sit_and_reach < 3.0:
-            st.error("- [유연성 경고]: 가동 범위가 매우 좁아 부상 위험이 있습니다. 매일 스트레칭을 하세요.")
-        elif sit_and_reach < 13.0:
-            st.warning("- [유연성 보통]: 보통 수준입니다. 운동 전후로 고관절과 햄스트링 스트레칭을 해주세요.")
-        else:
-            st.success("- [유연성 우수]: 유연성이 매우 뛰어납니다. 관절 상태를 잘 유지하고 있습니다.")
+    # [제자리멀리뛰기 평가]
+    if long_jump < jump_cut:
+        st.error(f"- [순발력 경고]: 현재 학년 기준({jump_cut}cm 미만)보다 순발력이 다소 부족합니다. 스쿼트 점프 등으로 하체 폭발력을 기르세요.")
+    else:
+        st.success("- [순발력 양호]: 현재 학년 기준을 충족합니다. 하체의 순간적인 힘 발휘 능력이 좋습니다.")
 
-        if grip_strength < 30.0:
-            st.error("- [근력 경고]: 악력이 약합니다. 철봉 매달리기나 악력기를 이용해 힘을 기르세요.")
-        elif grip_strength < 42.0:
-            st.warning("- [근력 보통]: 평범한 근력입니다. 푸시업이나 플랭크를 병행하여 보완하면 좋습니다.")
-        else:
-            st.success("- [근력 우수]: 상체 근력이 매우 우수합니다. 신체 지지 능력이 안정적입니다.")
+    # [유연성 평가]
+    if sit_and_reach < reach_cut:
+        st.error(f"- [유연성 경고]: 현재 학년 기준({reach_cut}cm 미만)보다 가동 범위가 좁아 부상 위험이 있습니다. 매일 스트레칭을 하세요.")
+    else:
+        st.success("- [유연성 양호]: 현재 학년 기준을 충족합니다. 관절 상태를 잘 유지하고 있습니다.")
 
-    # 여학생 기준 적용
-    elif gender == "여학생":
-        if shuttle_run < 24:
-            st.error("- [심폐지구력 경고]: 현재 심폐지구력이 매우 취약합니다. 주 3회 빠른 걷기나 가벼운 조깅을 추천합니다.")
-        elif shuttle_run < 41:
-            st.warning("- [심폐지구력 보통]: 보통 수준입니다. 주당 달리는 거리를 조금씩 늘려보세요.")
-        else:
-            st.success("- [심폐지구력 우수]: 최상위권입니다! 우수한 유산소 능력을 유지하세요.")
-
-        if long_jump < 131:
-            st.error("- [순발력 경고]: 순발력이 부족합니다. 제자리 높이뛰기나 줄넘기 등으로 하체 힘을 기르세요.")
-        elif long_jump < 166:
-            st.warning("- [순발력 보통]: 평균 수준입니다. 점프 시 무릎을 가슴 쪽으로 당기는 연습을 해보세요.")
-        else:
-            st.success("- [순발력 우수]: 순발력이 아주 뛰어납니다. 순간적인 힘을 잘 활용합니다.")
-
-        if sit_and_reach < 6.0:
-            st.error("- [유연성 경고]: 몸이 다소 뻣뻣하여 부상 위험이 있습니다. 샤워 후 10분씩 스트레칭을 하세요.")
-        elif sit_and_reach < 17.5:
-            st.warning("- [유연성 보통]: 보통 수준입니다. 다리를 뻗고 상체를 숙이는 동작을 자주 연습하세요.")
-        else:
-            st.success("- [여학생 유연성 우수]: 유연성이 매우 뛰어납니다. 훌륭한 관절 가동 범위를 가졌습니다.")
-
-        if grip_strength < 18.0:
-            st.error("- [근력 경고]: 악력 및 상체 근력이 약합니다. 아령 운동이나 가벼운 밴드 운동을 추천합니다.")
-        elif grip_strength < 26.5:
-            st.warning("- [근력 보통]: 평범한 수준입니다. 무릎을 대고 하는 푸시업 등으로 상체 힘을 기르세요.")
-        else:
-            st.success("- [근력 우수]: 상체 근력이 매우 우수합니다. 신체 지지 능력이 안정적입니다.")
+    # [악력 평가]
+    if grip_strength < grip_cut:
+        st.error(f"- [근력 경고]: 현재 학년 기준({grip_cut}kg 미만)보다 악력이 약합니다. 철봉 매달리기나 악력기를 이용해 힘을 기르세요.")
+    else:
+        st.success("- [근력 양호]: 현재 학년 기준을 충족합니다. 상체 근력과 신체 지지 능력이 안정적입니다.")
+           
 
 
 
