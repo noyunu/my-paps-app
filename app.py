@@ -1,7 +1,3 @@
-!pip install streamlit -q
-
-
-%%writefile app.py
 import streamlit as st
 
 st.title("🏃‍♂️ 고1 성별 맞춤형 PAPS 평가 프로그램")
